@@ -75,7 +75,7 @@ def retweet_tweet(search_list):
             user = tweet.user
             if ( user.id in user_ids_for_add ):
                 try:
-                    API.reet(id=tweet.id)
+                    API.retweet(id=tweet.id)
                     cnt += 1
                     # 待機時間
                     time.sleep(random.randint(50, 110))
