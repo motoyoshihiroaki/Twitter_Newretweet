@@ -22,6 +22,7 @@ auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 API = tweepy.API(auth)
 
 now = datetime.datetime.now()
+activate_time = now.strftime('%m月%d日 %H:%M')
 
 # slackにエラーを通知する関数
 def slack_to_error(error):
@@ -35,16 +36,12 @@ def slack_to_error(error):
 # slackに動作報告をする関数
 def slack_to_message():
     SLACK_OPERATION_REPORT = settings.SLACK_OPERATION_REPORT
-    activate_time = now.strftime('%Y年%m月%d日 %H:%M')
-    message = f'Twitter-NewRetweet Activate : {activate_time}'
+    message = f'Twitter-Retweet Activate : {activate_time}'
     requests.post(SLACK_OPERATION_REPORT, data=json.dumps({
         "text" : message,
         "icon_emoji" : ":sunny:",
         "username" : "動作報告"
     }))
-
-# いいね件数
-FAB_COUNT = 5
 
 
 def retweet_tweet(search_list):
@@ -55,9 +52,6 @@ def retweet_tweet(search_list):
     try:
         # ツイート上位100件を検索
         tweet_list = API.search(q=search_list, count=100)
-
-        # 現状フォロワーのID取得後リストを作成
-        # my_followers_ids = API.followers_ids("ses_web_create")
 
         user_ids_for_add = []
         for tweet in tweet_list:
@@ -81,9 +75,8 @@ def retweet_tweet(search_list):
                     time.sleep(random.randint(50, 110))
                     if ( cnt==FAB_COUNT ):
                         break
-                except tweepy.TweepError as tweepy_error:
+                except tweepy.TweepError:
                     if len(error_list) < 5:
-                        error_list.append(tweepy_error)
                         pass
                     else:
                         break
@@ -99,15 +92,13 @@ def retweet_tweet(search_list):
     except Exception as e:
         slack_to_error(e)
 
-
 def main():
     slack_to_message()
-
-    SEARCH_LIST = ['プログラミング', 'ブログ書', 'Webデザイン', '今日の積み上げ', 'ブログ初心者', '読書']    
-
+    SEARCH_LIST = settings.SEARCH_LIST
     for word in SEARCH_LIST:
         tmp_list = [word]
         retweet_tweet(tmp_list)
+    print(f'Twitter-retweet : {activate_time}')
     return
 
 if __name__=="__main__":
